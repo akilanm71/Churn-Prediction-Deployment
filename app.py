@@ -1,30 +1,28 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import joblib
+import json
 import pandas as pd
 from bertopic import BERTopic
-from transformers import pipeline
 from sentence_transformers import SentenceTransformer
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-topic_info = topic_model.get_topic_info()
 
 
-app = FastAPI(title="Churn + Topic + Generator API")
+
+app = FastAPI(title="Churn + Topic ")
 ## Model Setup loading Data
 @app.get("/")
 def home():
     return {"message": "API running"}
 ## Churn Model
 model = joblib.load(r"model/churn_lightgbm.pkl")
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
 feature_columns = joblib.load("features.pkl")
 
+with open("topic_labels.json") as f:
+    label_mapping = json.load(f)
 ## Topic Model
-topic_model = BERTopic.load("./topic_model_final_gen",embedding_model=embedding_model)
-
-## Text Generator Model
-generatort2t = pipeline(
-    "text2text-generation",
-    model="google/flan-t5-base")
+topic_model = BERTopic.load("./topic_model_maxmin_up",embedding_model=embedding_model)
 
 class CustomerInput(BaseModel):
     
@@ -76,36 +74,37 @@ def preprocess_input(input_dict, feature_columns):
     
     return df
 
-## Label Generator Function
-def generate_label(prompt):
-    output = generatort2t(prompt, max_new_tokens=10, do_sample=False)
-    return output[0]["generated_text"]
 
 ## Prediction
 
 @app.post("/predict")
 def predict(customer: CustomerInput):
     
-    input_dict = customer.dict()  
+    input_dict = customer.dict()
     review_text = input_dict.pop("review_text")
-    processed_df = preprocess_input(input_dict,feature_columns)
+
+    # -------- Churn Prediction --------
+    processed_df = preprocess_input(input_dict, feature_columns)
     
     prediction = model.predict(processed_df)[0]
     probability = model.predict_proba(processed_df)[0][1]
-    
-    topic, topic_prob = topic_model.transform([review_text])
 
-    label = generate_label(review_text)
-    
+    # -------- Topic Prediction --------
+    topic, topic_prob = topic_model.transform([review_text])
     topic_id = int(topic[0])
-    topic_name = topic_info.loc[topic_info["Topic"] == topic_id,"Name"].values[0]
+
+    # Handle Outlier
+    if topic_id == -1:
+        topic_label = "Other / Outlier"
+        confidence = None
+    else:
+        topic_label = label_mapping.get(str(topic_id), "Unknown")
+        confidence = float(max(topic_prob[0])) if topic_prob is not None else None
 
     return {
         "churn_prediction": int(prediction),
         "churn_probability": float(probability),
-        "topic": int(topic[0]),
-        "topic_probability": float(topic_prob[0]) if topic_prob is not None else None,
-        "generated_label": label,
         "topic_id": topic_id,
-        "topic_name": topic_name
+        "topic_label": topic_label,
+        "topic_confidence": confidence
     }
