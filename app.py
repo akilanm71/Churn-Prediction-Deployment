@@ -5,17 +5,20 @@ import json
 import pandas as pd
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
-
+import torch
+torch.set_num_threads(1)
 
 
 app = FastAPI(title="Churn + Topic ")
+
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 ## Model Setup loading Data
 @app.get("/")
 def home():
     return {"message": "API running"}
 ## Churn Model
 model = joblib.load(r"model/churn_lightgbm.pkl")
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
 
 feature_columns = joblib.load("features.pkl")
 
