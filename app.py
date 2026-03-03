@@ -5,58 +5,56 @@ import torch
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
 from transformers import pipeline
+from collections import Counter
+import matplotlib.pyplot as plt
 
 torch.set_num_threads(1)
+topic_counter = Counter()
 
-# =========================
 # LOAD MODELS (ONLY ONCE)
-# =========================
+
 
 embedding_model = SentenceTransformer(
-    "all-MiniLM-L6-v2",
-    device="cpu"
-)
+                 "all-MiniLM-L6-v2",
+                  device="cpu")
 
 topic_model = BERTopic.load(
-    "./topic_model_final_gen",
-    embedding_model=embedding_model
-)
+             "topic_model_maxmin_up",
+              embedding_model=embedding_model)
 
 topic_info = topic_model.get_topic_info()
 
 churn_model = joblib.load("model/churn_lightgbm.pkl")
 feature_columns = joblib.load("features.pkl")
-
+scale = joblib.load("scaler.pkl")
 #  flan-t5-base may be heavy on free tier
 # If memory issue, change to flan-t5-small
-generator = pipeline(
-    "text2text-generation",
-    model="google/flan-t5-small",
-    device=-1
-)
+generator = pipeline("text2text-generation",
+                      model="google/flan-t5-small",device=-1)
 
 
-# =========================
 # PREPROCESS FUNCTION
-# =========================
+
 
 def preprocess_input(input_dict):
     df = pd.DataFrame([input_dict])
-
+    num_cols = ["Age","Number_of_Dependents","Number_of_Referrals",
+                "Tenure_in_Months","Avg_Monthly_Long_Distance_Charges","Avg_Monthly_GB_Download",
+                "Monthly_Charge","Satisfaction_Score"]
     cat_cols = ["Offer", "Internet_Type", "City_Grouped", "Payment_Method"]
+    df[num_cols] = scale.transform(df[num_cols])
 
     df = pd.get_dummies(df, columns=cat_cols)
     df = df.reindex(columns=feature_columns, fill_value=0)
-
+    
     bool_cols = df.select_dtypes(include=["bool", "uint8"]).columns
     df[bool_cols] = df[bool_cols].astype(int)
 
     return df
 
 
-# =========================
 # MAIN PREDICTION FUNCTION
-# =========================
+
 
 def predict(
     Gender, Age, Married, Number_of_Dependents,
@@ -73,8 +71,7 @@ def predict(
     Satisfaction_Score,
     Offer, Internet_Type,
     City_Grouped, Payment_Method,
-    review_text
-):
+    review_text):
 
     input_dict = {
         "Gender": Gender,
@@ -109,23 +106,33 @@ def predict(
 
     # Churn
     processed_df = preprocess_input(input_dict)
+   
     prediction = churn_model.predict(processed_df)[0]
-    probability = churn_model.predict_proba(processed_df)[0][1]
+    probability = churn_model.predict_proba(processed_df)[0][
+    list(churn_model.classes_).index(1)]
 
     # Topic
     topic, topic_prob = topic_model.transform([review_text])
     topic_id = int(topic[0])
 
     topic_name = topic_info.loc[
-        topic_info["Topic"] == topic_id, "Name"
-    ].values[0]
+        topic_info["Topic"] == topic_id, "Name"].values[0]
+    topic_counter[topic_name] += 1
+    colors = plt.cm.tab10(range(len(topic_counter)))
+
+    fig, ax = plt.subplots()
+    ax.bar(topic_counter.keys(), topic_counter.values(),color = colors)
+    ax.set_title("Customer Complaint Trends by Category")
+    ax.set_ylabel("Count")
+    ax.tick_params(axis="x", rotation=20)
+    plt.tight_layout()
+
 
     # Label generation
     label_output = generator(
         review_text,
         max_new_tokens=10,
-        do_sample=False
-    )
+        do_sample=False)
     generated_label = label_output[0]["generated_text"]
 
     return (
@@ -133,13 +140,13 @@ def predict(
         round(float(probability), 3),
         topic_id,
         topic_name,
-        generated_label
+        generated_label,fig
     )
 
 
-# =========================
+
 # GRADIO UI
-# =========================
+
 
 interface = gr.Interface(
     fn=predict,
@@ -179,7 +186,8 @@ interface = gr.Interface(
         gr.Number(label="Churn Probability"),
         gr.Number(label="Topic ID"),
         gr.Textbox(label="Topic Name"),
-        gr.Textbox(label="Generated Label")
+        gr.Textbox(label="Generated Label"),
+        gr.Plot(label="Topic Distribution")
     ],
     title="Churn + Topic + Generator System",
     description="End-to-End Customer Churn & Topic Analysis"
