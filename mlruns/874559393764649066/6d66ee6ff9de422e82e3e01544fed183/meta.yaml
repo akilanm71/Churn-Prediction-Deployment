@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/AKILAN M/Documents/GIT_Folder/Churn_Deploy/mlruns/874559393764649066/6d66ee6ff9de422e82e3e01544fed183/artifacts
+end_time: 1772872938730
+entry_point_name: ''
+experiment_id: '874559393764649066'
+lifecycle_stage: active
+run_id: 6d66ee6ff9de422e82e3e01544fed183
+run_name: LogisticRegression
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1772872923679
+status: 3
+tags: []
+user_id: AKILAN M

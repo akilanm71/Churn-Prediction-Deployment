@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/AKILAN M/Documents/GIT_Folder/Churn_Deploy/mlruns/874559393764649066/175a509c69314186b9fb860d0da7b0c8/artifacts
+end_time: 1772873108425
+entry_point_name: ''
+experiment_id: '874559393764649066'
+lifecycle_stage: active
+run_id: 175a509c69314186b9fb860d0da7b0c8
+run_name: LightGBM
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1772873039475
+status: 3
+tags: []
+user_id: AKILAN M

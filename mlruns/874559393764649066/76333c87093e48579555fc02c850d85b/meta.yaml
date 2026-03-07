@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/AKILAN M/Documents/GIT_Folder/Churn_Deploy/mlruns/874559393764649066/76333c87093e48579555fc02c850d85b/artifacts
+end_time: 1772873039465
+entry_point_name: ''
+experiment_id: '874559393764649066'
+lifecycle_stage: active
+run_id: 76333c87093e48579555fc02c850d85b
+run_name: xg_Boost
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1772872947638
+status: 3
+tags: []
+user_id: AKILAN M

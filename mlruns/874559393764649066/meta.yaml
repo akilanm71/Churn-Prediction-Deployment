@@ -1,0 +1,7 @@
+artifact_location: file:///C:/Users/AKILAN M/Documents/GIT_Folder/Churn_Deploy/mlruns/874559393764649066
+creation_time: 1772872923118
+experiment_id: '874559393764649066'
+last_update_time: 1772872923118
+lifecycle_stage: active
+name: churn_prediction
+workspace: default

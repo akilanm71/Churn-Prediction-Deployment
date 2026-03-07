@@ -1,0 +1,10 @@
+artifact_location: file:///C:/Users/AKILAN M/Documents/GIT_Folder/Churn_Deploy/mlruns/874559393764649066/models/m-44ffee8156b74214a4e18af3a874522e/artifacts
+creation_timestamp: 1772872923825
+experiment_id: '874559393764649066'
+last_updated_timestamp: 1772872938720
+model_id: m-44ffee8156b74214a4e18af3a874522e
+model_type: null
+name: model
+source_run_id: 6d66ee6ff9de422e82e3e01544fed183
+status: 2
+status_message: null

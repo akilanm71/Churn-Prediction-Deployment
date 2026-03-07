@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/AKILAN M/Documents/GIT_Folder/Churn_Deploy/mlruns/874559393764649066/c4bbe1b832b743b2815821be474702f6/artifacts
+end_time: 1772872947628
+entry_point_name: ''
+experiment_id: '874559393764649066'
+lifecycle_stage: active
+run_id: c4bbe1b832b743b2815821be474702f6
+run_name: RandomForest
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1772872938736
+status: 3
+tags: []
+user_id: AKILAN M
